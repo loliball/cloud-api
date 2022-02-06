@@ -1,0 +1,6 @@
+# Project exclude paths
+/.gradle/
+/core/build/
+/example/build/
+/googledrive/build/
+/onedrive/build/
