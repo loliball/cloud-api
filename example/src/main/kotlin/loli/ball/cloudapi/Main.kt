@@ -1,3 +1,5 @@
+package loli.ball.cloudapi
+
 import okhttp3.OkHttpClient
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -18,6 +20,7 @@ fun proxy() {
 fun main(args: Array<String>) {
     proxy()
     oneDriveExample()
+    googleDriveExample()
 }
 
 private fun oneDriveExample() {

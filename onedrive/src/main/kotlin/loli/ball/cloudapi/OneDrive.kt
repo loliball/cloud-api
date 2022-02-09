@@ -1,3 +1,5 @@
+package loli.ball.cloudapi
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -12,10 +14,14 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
         ignoreUnknownKeys = true
     }
 
-    override fun isSupport(url: String): Boolean {
-        return url.startsWith("https://1drv.ms", true) ||
-                url.startsWith("https://onedrive.live.com", true)
+    companion object {
+        fun isSupport(url: String): Boolean {
+            return url.startsWith("https://1drv.ms", true) ||
+                    url.startsWith("https://onedrive.live.com", true)
+        }
     }
+
+    override fun isSupport(url: String): Boolean = OneDrive.isSupport(url)
 
     override fun parse(url: String): CloudRoot {
         val base64org = Base64.getEncoder().encodeToString(url.toByteArray())

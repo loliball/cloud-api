@@ -1,16 +1,28 @@
+package loli.ball.cloudapi
+
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.File
 
-class GoogleDrive(private val client: OkHttpClient = OkHttpClient(), private var token: String? = null) : CloudDrive {
+class GoogleDrive(
+    private val client: OkHttpClient = OkHttpClient(),
+    private var token: String? = null,
+    private val credential: String? = null,
+    private val tokenStoreFolder: File? = null
+) : CloudDrive {
 
     private val regex = """https://drive.google.com/drive/folders/(\w+)\??.*?""".toRegex()
 
-    override fun isSupport(url: String): Boolean {
-        return url.startsWith("https://drive.google.com", true)
+    companion object {
+        fun isSupport(url: String): Boolean {
+            return url.startsWith("https://drive.google.com", true)
+        }
     }
+
+    override fun isSupport(url: String) = GoogleDrive.isSupport(url)
 
     override fun parse(url: String): CloudRoot {
         val fileId = url.fromShareLink()
@@ -38,7 +50,7 @@ class GoogleDrive(private val client: OkHttpClient = OkHttpClient(), private var
     }
 
     fun login(): String? {
-        token = DriveAuthorization.login()
+        token = DriveAuthorization.login(credential.orEmpty(), tokenStoreFolder)
         return token
     }
 

@@ -1,3 +1,5 @@
+package loli.ball.cloudapi
+
 data class CloudFile(
     val name: String,
     val url: String
