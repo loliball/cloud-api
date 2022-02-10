@@ -1,45 +1,89 @@
 package loli.ball.cloudapi
 
-import com.google.api.client.auth.oauth2.Credential
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.json.JsonFactory
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.client.util.store.FileDataStoreFactory
-import com.google.api.client.util.store.MemoryDataStoreFactory
-import com.google.api.services.drive.DriveScopes
-import java.io.File
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import okhttp3.FormBody
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.net.ServerSocket
 import kotlin.random.Random
 
 object DriveAuthorization {
 
-    private val JSON_FACTORY: JsonFactory = GsonFactory.getDefaultInstance()
+    private fun tinyServer(port: Int) =
+        ServerSocket(port).use { server ->
+            server.accept().use { socket ->
+                socket.getInputStream().use { inp ->
+                    val readLine = inp.reader().buffered(50).readLine()
+                    socket.getOutputStream().use { out ->
+                        out.write(
+                            """
+                            HTTP/1.1 200 OK
+                            Date: Wed, 04 Jul 2001 12:08:56 GMT
+                            Content-Type: text/plain
+                            Content-Length: 2
 
-    private val SCOPES = listOf(
-        DriveScopes.DRIVE_METADATA_READONLY,
-        DriveScopes.DRIVE_READONLY
-    )
-
-    private fun getCredentials(credential: String, tokenStoreFolder: File?): Credential {
-        val transport = GoogleNetHttpTransport.newTrustedTransport()
-        val clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, credential.reader())
-        val storeFactory = if (tokenStoreFolder == null) {
-            MemoryDataStoreFactory.getDefaultInstance()
-        } else {
-            FileDataStoreFactory(tokenStoreFolder)
+                            OK
+                        """.trimIndent().toByteArray()
+                        )
+                    }
+                    readLine
+                }
+            }
         }
-        val flow = GoogleAuthorizationCodeFlow.Builder(transport, JSON_FACTORY, clientSecrets, SCOPES)
-            .setDataStoreFactory(storeFactory)
-            .setAccessType("offline")
+
+    private val exactCode = """.*code=([^ &]+)[ &].*""".toRegex()
+
+    fun login(client: OkHttpClient, credential: String, loginScreen: (String) -> Unit): OAuthKey {
+        val oAuth2 = Json.decodeFromString<GoogleOAuth2>(credential)
+        val scope = listOf(
+            "https://www.googleapis.com/auth/drive.metadata.readonly",
+            "https://www.googleapis.com/auth/drive.readonly"
+        ).joinToString(" ")
+        val port = Random.nextInt(10000, 60000)
+        val redirectUri = "http://localhost:$port"
+        val httpUrl = "https://accounts.google.com/o/oauth2/auth".toHttpUrlOrNull()!!.newBuilder()
+            .addQueryParameter("access_type", "offline")
+            .addQueryParameter("response_type", "code")
+            .addQueryParameter("client_id", oAuth2.installed.client_id)
+            .addQueryParameter("redirect_uri", redirectUri)
+            .addQueryParameter("scope", scope)
             .build()
-        val receiver = LocalServerReceiver.Builder().setPort(Random.Default.nextInt(10000, 60000)).build()
-        return AuthorizationCodeInstalledApp(flow, receiver).authorize("user")
+        loginScreen(httpUrl.toString())
+        val resp = tinyServer(port)
+        val authorizationCode = exactCode.find(resp)?.groupValues?.get(1).orEmpty()
+
+        val request = Request.Builder()
+            .url("https://oauth2.googleapis.com/token")
+            .post(
+                FormBody.Builder()
+                    .add("client_id", oAuth2.installed.client_id)
+                    .add("client_secret", oAuth2.installed.client_secret)
+                    .add("code", authorizationCode)
+                    .add("grant_type", "authorization_code")
+                    .add("redirect_uri", redirectUri)
+                    .build()
+            )
+            .build()
+        val response = client.newCall(request).execute()
+        return Json.decodeFromString(response.body?.string().orEmpty())
     }
 
-    fun login(credential: String, tokenStoreFolder: File? = null): String {
-        return getCredentials(credential, tokenStoreFolder).accessToken
+    fun refresh(client: OkHttpClient, credential: String, refreshToken: String): OAuthKey {
+        val oAuth2 = Json.decodeFromString<GoogleOAuth2>(credential)
+        val request = Request.Builder()
+            .url("https://oauth2.googleapis.com/token")
+            .post(
+                FormBody.Builder()
+                    .add("client_id", oAuth2.installed.client_id)
+                    .add("client_secret", oAuth2.installed.client_secret)
+                    .add("grant_type", "refresh_token")
+                    .add("refresh_token", refreshToken)
+                    .build()
+            )
+            .build()
+        val response = client.newCall(request).execute()
+        return Json.decodeFromString(response.body?.string().orEmpty())
     }
 }

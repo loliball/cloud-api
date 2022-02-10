@@ -19,7 +19,7 @@ publishing {
 
 dependencies {
     api(project(":onedrive"))
-    implementation(project(":googledrive"))
+    api(project(":googledrive"))
     testImplementation(kotlin("test"))
 }
 

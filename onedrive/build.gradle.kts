@@ -19,9 +19,9 @@ publishing {
 }
 
 dependencies {
+    api(project(":core"))
     api("com.squareup.okhttp3:okhttp:4.9.3")
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    api(project(":core"))
     testImplementation(kotlin("test"))
 }
 

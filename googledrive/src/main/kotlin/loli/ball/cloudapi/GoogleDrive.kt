@@ -5,13 +5,10 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.File
 
 class GoogleDrive(
     private val client: OkHttpClient = OkHttpClient(),
-    private var token: String? = null,
-    private val credential: String? = null,
-    private val tokenStoreFolder: File? = null
+    private var token: String? = null
 ) : CloudDrive {
 
     private val regex = """https://drive.google.com/drive/folders/(\w+)\??.*?""".toRegex()
@@ -49,12 +46,17 @@ class GoogleDrive(
         return CloudRoot(dirs, files)
     }
 
-    fun login(): String? {
-        token = DriveAuthorization.login(credential.orEmpty(), tokenStoreFolder)
-        return token
+    fun login(credential: String, loginScreen: (String)->Unit): OAuthKey {
+        return DriveAuthorization.login(client, credential, loginScreen).apply {
+            token = access_token
+        }
     }
 
-    private fun String.fromShareLink() = regex.matchEntire(this)?.groupValues?.get(1) ?: ""
+    fun refresh(credential: String, refreshToken: String): OAuthKey {
+        return DriveAuthorization.refresh(client, credential, refreshToken)
+    }
+
+    private fun String.fromShareLink() = regex.matchEntire(this)?.groupValues?.get(1).orEmpty()
 
     private fun String.toShareLink() = "https://drive.google.com/drive/folders/$this"
 

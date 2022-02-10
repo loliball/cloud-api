@@ -19,12 +19,9 @@ publishing {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     api("com.squareup.okhttp3:okhttp:4.9.3")
     api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation ("com.google.api-client:google-api-client:1.33.1")
-    implementation ("com.google.oauth-client:google-oauth-client-jetty:1.33.0")
-    implementation ("com.google.apis:google-api-services-drive:v3-rev20220110-1.32.1")
     testImplementation(kotlin("test"))
 }
 
