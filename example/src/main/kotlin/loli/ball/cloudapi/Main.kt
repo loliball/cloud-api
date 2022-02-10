@@ -42,8 +42,9 @@ private fun googleDriveExample() {
         .build()
 
     val drive = GoogleDrive(client)
-    val credential =
-        String(FileInputStream("C:\\Users\\hp\\Downloads\\client_secret_782626792532-f6f1nmnnikmv82arjrj8mh9ugko5j2mu.apps.googleusercontent.com.json").readAllBytes())
+    val path =
+        "C:\\Users\\hp\\Downloads\\client_secret_782626792532-f6f1nmnnikmv82arjrj8mh9ugko5j2mu.apps.googleusercontent.com.json"
+    val credential = FileInputStream(path).reader().readLines().joinToString("\n")
     val oAuthKey = drive.login(credential, ::println)
     println(oAuthKey)
 
