@@ -31,11 +31,11 @@ private fun oneDriveExample() {
     val root = drive.parse("https://1drv.ms/u/s!Ai6oanP7THBlg7kTtDtBzJA7xXVrEA?e=2SVm4N")
     println(root)
     val root2 = drive.parse("https://1drv.ms/f/s!Ai6oanP7THBlg75LtDtBzJA7xXVrEA")
+    println(root2.files.first().image!!.thumbnail())
     println(root2)
 }
 
 private fun googleDriveExample() {
-
     val client = OkHttpClient.Builder()
         .followRedirects(false)
         .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(address, port.toInt())))

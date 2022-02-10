@@ -39,7 +39,26 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
             if (it.download == null) {
                 dirs.add(CloudDirectory(it.name, it.webUrl))
             } else {
-                files.add(CloudFile(it.name, it.download))
+                val image = if(it.image != null) {
+                    val thumbnail = {
+                        val thumbnailUrl =
+                            "https://api.onedrive.com/v1.0/shares/${it.parentReference.shareId}/items/${it.id}/thumbnails"
+                        val req1 = Request.Builder()
+                            .url(thumbnailUrl)
+                            .get()
+                            .build()
+                        val response1 = client.newCall(req1).execute()
+                        val json1 = response1.body?.string().orEmpty()
+                        val thumbnails = parser.decodeFromString<OThumbnail>(json1)
+                        thumbnails.value.first().large.url
+                    }
+                    CloudImage(
+                        thumbnail = thumbnail,
+                        width = it.image.width,
+                        height = it.image.height,
+                    )
+                } else null
+                files.add(CloudFile(it.name, it.download, image))
             }
         }
         return CloudRoot(dirs, files)
@@ -52,10 +71,42 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
 
     @Serializable
     private data class OFile(
+        val id: String,
         val name: String,
         val webUrl: String,
         @SerialName("@content.downloadUrl")
-        val download: String? = null
+        val download: String? = null,
+        val image: OImage? = null,
+        val parentReference: OParent
     )
 
+    @Serializable
+    private data class OImage(
+        val width: Int,
+        val height: Int
+    )
+
+    @Serializable
+    private data class OParent(
+        val shareId: String
+    )
+
+    @Serializable
+    private data class OThumbnail(
+        val value: List<OValue>
+    )
+
+    @Serializable
+    private data class OValue(
+        val large: OThumbnailImage,
+        val medium: OThumbnailImage,
+        val small: OThumbnailImage,
+    )
+
+    @Serializable
+    private data class OThumbnailImage(
+        val height: Int,
+        val url: String,
+        val width: Int
+    )
 }

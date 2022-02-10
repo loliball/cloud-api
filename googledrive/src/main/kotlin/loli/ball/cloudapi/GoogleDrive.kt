@@ -3,6 +3,7 @@ package loli.ball.cloudapi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -23,8 +24,19 @@ class GoogleDrive(
 
     override fun parse(url: String): CloudRoot {
         val fileId = url.fromShareLink()
+        val fields = listOf(
+            "files/id",
+            "files/name",
+            "files/mimeType",
+            "files/thumbnailLink",
+            "files/imageMediaMetadata"
+        ).joinToString(",")
+        val httpUrl = "https://content.googleapis.com/drive/v3/files".toHttpUrl().newBuilder()
+            .addQueryParameter("q", "'$fileId' in parents")
+            .addQueryParameter("fields", fields)
+            .build()
         val request = Request.Builder()
-            .url("https://content.googleapis.com/drive/v3/files?q='$fileId' in parents")
+            .url(httpUrl)
             .apply {
                 if (token != null) {
                     header("authorization", "Bearer $token")
@@ -40,13 +52,20 @@ class GoogleDrive(
             if (it.mimeType == "application/vnd.google-apps.folder") {
                 dirs.add(CloudDirectory(it.name, it.id.toShareLink()))
             } else {
-                files.add(CloudFile(it.name, it.id.toDownloadLink()))
+                val image = if (it.thumbnailLink != null) {
+                    CloudImage(
+                        { it.thumbnailLink },
+                        it.imageMediaMetadata?.width ?: 0,
+                        it.imageMediaMetadata?.height ?: 0
+                    )
+                } else null
+                files.add(CloudFile(it.name, it.id.toDownloadLink(), image))
             }
         }
         return CloudRoot(dirs, files)
     }
 
-    fun login(credential: String, loginScreen: (String)->Unit): OAuthKey {
+    fun login(credential: String, loginScreen: (String) -> Unit): OAuthKey {
         return DriveAuthorization.login(client, credential, loginScreen).apply {
             token = access_token
         }
@@ -64,16 +83,22 @@ class GoogleDrive(
 
     @Serializable
     private data class GResult(
-        val files: List<GFile>,
-        val incompleteSearch: Boolean,
-        val kind: String
+        val files: List<GFile>
     )
 
     @Serializable
     private data class GFile(
         val id: String,
-        val kind: String,
+        val name: String,
         val mimeType: String,
-        val name: String
+        val thumbnailLink: String? = null,
+        val imageMediaMetadata: GImage? = null
+    )
+
+    @Serializable
+    private data class GImage(
+        val width: Int,
+        val height: Int,
+        val rotation: Int
     )
 }
