@@ -12,7 +12,7 @@ class GoogleDrive(
     private var token: String? = null
 ) : CloudDrive {
 
-    private val regex = """https://drive.google.com/drive/folders/(\w+)\??.*?""".toRegex()
+    private val regex = """https://drive.google.com/drive/folders/([^?]+)\??.*?""".toRegex()
 
     companion object {
         fun isSupport(url: String): Boolean {
