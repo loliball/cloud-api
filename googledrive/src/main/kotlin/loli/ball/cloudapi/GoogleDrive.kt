@@ -72,7 +72,9 @@ class GoogleDrive(
     }
 
     fun refresh(credential: String, refreshToken: String): OAuthKey {
-        return DriveAuthorization.refresh(client, credential, refreshToken)
+        return DriveAuthorization.refresh(client, credential, refreshToken).apply {
+            token = access_token
+        }
     }
 
     private fun String.fromShareLink() = regex.matchEntire(this)?.groupValues?.get(1).orEmpty()
