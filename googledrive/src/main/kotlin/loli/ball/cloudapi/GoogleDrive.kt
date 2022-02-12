@@ -99,8 +99,8 @@ class GoogleDrive(
 
     @Serializable
     private data class GImage(
-        val width: Int,
-        val height: Int,
-        val rotation: Int
+        val width: Int = 0,
+        val height: Int = 0,
+        val rotation: Int = 0
     )
 }
