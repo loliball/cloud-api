@@ -27,7 +27,9 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
         val base64org = Base64.getEncoder().encodeToString(url.toByteArray())
         val encUrl = "u!" + base64org.trimEnd('=').replace('/', '_').replace('+', '-')
         val req = Request.Builder()
-            .url("https://api.onedrive.com/v1.0/shares/$encUrl/root?expand=children")
+            .url("https://api.onedrive.com/v1.0/shares/$encUrl/root?" +
+                    "\$expand=children(\$select=id,name,webUrl,image,@content.downloadUrl)&" +
+                    "\$select=children,id,webUrl")
             .get()
             .build()
         val response = client.newCall(req).execute()
@@ -35,6 +37,7 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
         val oResult = parser.decodeFromString<OResult>(json)
         val dirs = mutableListOf<CloudDirectory>()
         val files = mutableListOf<CloudFile>()
+        val pShareId = oResult.webUrl.substring(oResult.webUrl.lastIndexOf('/') + 1)
         oResult.children.forEach {
             if (it.download == null) {
                 dirs.add(CloudDirectory(it.name, it.webUrl))
@@ -42,7 +45,7 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
                 val image = if(it.image != null) {
                     val thumbnail = {
                         val thumbnailUrl =
-                            "https://api.onedrive.com/v1.0/shares/${it.parentReference.shareId}/items/${it.id}/thumbnails"
+                            "https://api.onedrive.com/v1.0/shares/$pShareId/items/${it.id}/thumbnails"
                         val req1 = Request.Builder()
                             .url(thumbnailUrl)
                             .get()
@@ -66,6 +69,7 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
 
     @Serializable
     private data class OResult(
+        val webUrl: String,
         val children: List<OFile>
     )
 
@@ -76,19 +80,13 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
         val webUrl: String,
         @SerialName("@content.downloadUrl")
         val download: String? = null,
-        val image: OImage? = null,
-        val parentReference: OParent
+        val image: OImage? = null
     )
 
     @Serializable
     private data class OImage(
         val width: Int,
         val height: Int
-    )
-
-    @Serializable
-    private data class OParent(
-        val shareId: String
     )
 
     @Serializable
