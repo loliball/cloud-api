@@ -8,6 +8,9 @@ data class CloudFile(
 
 data class CloudImage(
     val thumbnail: () -> String,
+    val thumbnailSmall: () -> String,
+    val thumbnailWidth: (Int) -> String = { "" },
+    val thumbnailHeight: (Int) -> String = { "" },
     val width: Int,
     val height: Int
 )

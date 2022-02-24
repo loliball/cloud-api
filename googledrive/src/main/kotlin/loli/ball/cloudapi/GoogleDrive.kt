@@ -48,22 +48,31 @@ class GoogleDrive(
         val gResult = Json.decodeFromString<GResult>(json)
         val dirs = mutableListOf<CloudDirectory>()
         val files = mutableListOf<CloudFile>()
-        gResult.files.forEach {
-            if (it.mimeType == "application/vnd.google-apps.folder") {
-                dirs.add(CloudDirectory(it.name, it.id.toShareLink()))
+        gResult.files.forEach { gf ->
+            if (gf.mimeType == "application/vnd.google-apps.folder") {
+                dirs.add(CloudDirectory(gf.name, gf.id.toShareLink()))
             } else {
-                val image = if (it.thumbnailLink != null) {
+                val image = if (gf.thumbnailLink != null) {
                     CloudImage(
-                        { it.thumbnailLink },
-                        it.imageMediaMetadata?.width ?: 0,
-                        it.imageMediaMetadata?.height ?: 0
+                        thumbnail = { queryBigThumbnailWidth(fileId) },
+                        thumbnailSmall = { gf.thumbnailLink },
+                        thumbnailWidth = { queryBigThumbnailWidth(fileId, it) },
+                        thumbnailHeight = { queryBigThumbnailHeight(fileId, it) },
+                        width = gf.imageMediaMetadata?.width ?: 0,
+                        height = gf.imageMediaMetadata?.height ?: 0
                     )
                 } else null
-                files.add(CloudFile(it.name, it.id.toDownloadLink(), image))
+                files.add(CloudFile(gf.name, gf.id.toDownloadLink(), image))
             }
         }
         return CloudRoot(dirs, files)
     }
+
+    private fun queryBigThumbnailWidth(fileId: String, width: Int = 1000) =
+        "https://drive.google.com/thumbnail?authuser=0&sz=w$width&id=$fileId"
+
+    private fun queryBigThumbnailHeight(fileId: String, height: Int = 1000) =
+        "https://drive.google.com/thumbnail?authuser=0&sz=h$height&id=$fileId"
 
     fun login(credential: String, loginScreen: (String) -> Unit): OAuthKey {
         return DriveAuthorization.login(client, credential, loginScreen).apply {

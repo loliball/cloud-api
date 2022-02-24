@@ -27,9 +27,11 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
         val base64org = Base64.getEncoder().encodeToString(url.toByteArray())
         val encUrl = "u!" + base64org.trimEnd('=').replace('/', '_').replace('+', '-')
         val req = Request.Builder()
-            .url("https://api.onedrive.com/v1.0/shares/$encUrl/root?" +
-                    "\$expand=children(\$select=id,name,webUrl,image,@content.downloadUrl)&" +
-                    "\$select=children,id,webUrl")
+            .url(
+                "https://api.onedrive.com/v1.0/shares/$encUrl/root?" +
+                        "\$expand=children(\$select=id,name,webUrl,image,@content.downloadUrl)&" +
+                        "\$select=children,id,webUrl"
+            )
             .get()
             .build()
         val response = client.newCall(req).execute()
@@ -38,33 +40,47 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
         val dirs = mutableListOf<CloudDirectory>()
         val files = mutableListOf<CloudFile>()
         val pShareId = oResult.webUrl.substring(oResult.webUrl.lastIndexOf('/') + 1)
-        oResult.children.forEach {
-            if (it.download == null) {
-                dirs.add(CloudDirectory(it.name, it.webUrl))
+        oResult.children.forEach { of ->
+            if (of.download == null) {
+                dirs.add(CloudDirectory(of.name, of.webUrl))
             } else {
-                val image = if(it.image != null) {
-                    val thumbnail = {
-                        val thumbnailUrl =
-                            "https://api.onedrive.com/v1.0/shares/$pShareId/items/${it.id}/thumbnails"
-                        val req1 = Request.Builder()
-                            .url(thumbnailUrl)
-                            .get()
-                            .build()
-                        val response1 = client.newCall(req1).execute()
-                        val json1 = response1.body?.string().orEmpty()
-                        val thumbnails = parser.decodeFromString<OThumbnail>(json1)
-                        thumbnails.value.first().large.url
-                    }
+                val image = if (of.image != null) {
                     CloudImage(
-                        thumbnail = thumbnail,
-                        width = it.image.width,
-                        height = it.image.height,
+                        thumbnail = { queryThumbnail(pShareId, of.id).large.url },
+                        thumbnailSmall = { queryThumbnail(pShareId, of.id).small.url },
+                        thumbnailWidth = { queryThumbnailWidth(queryThumbnail(pShareId, of.id).small.url, it) },
+                        thumbnailHeight = { queryThumbnailHeight(queryThumbnail(pShareId, of.id).small.url, it) },
+                        width = of.image.width,
+                        height = of.image.height,
                     )
                 } else null
-                files.add(CloudFile(it.name, it.download, image))
+                files.add(CloudFile(of.name, of.download, image))
             }
         }
         return CloudRoot(dirs, files)
+    }
+
+    private fun queryThumbnailWidth(link: String, width: Int = 1000): String {
+        val append = "?width=$width&height=10000&cropmode=none"
+        return link.substring(0, link.lastIndexOf("?")) + append
+    }
+
+    private fun queryThumbnailHeight(link: String, height: Int = 1000): String {
+        val append = "?width=10000&height=$height&cropmode=none"
+        return link.substring(0, link.lastIndexOf("?")) + append
+    }
+
+    private fun queryThumbnail(pShareId: String, id: String): OValue {
+        val thumbnailUrl =
+            "https://api.onedrive.com/v1.0/shares/$pShareId/items/$id/thumbnails"
+        val req1 = Request.Builder()
+            .url(thumbnailUrl)
+            .get()
+            .build()
+        val response1 = client.newCall(req1).execute()
+        val json1 = response1.body?.string().orEmpty()
+        val thumbnails = parser.decodeFromString<OThumbnail>(json1)
+        return thumbnails.value.first()
     }
 
     @Serializable
