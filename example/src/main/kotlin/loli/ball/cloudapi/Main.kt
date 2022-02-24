@@ -8,16 +8,7 @@ import java.net.Proxy
 const val address = "127.0.0.1"
 const val port = "10800"
 
-fun proxy() {
-    System.setProperty("proxySet", "true");
-    System.setProperty("http.proxyHost", address);
-    System.setProperty("https.proxyHost", address);
-    System.setProperty("http.proxyPort", port);
-    System.setProperty("https.proxyPort", port);
-}
-
-fun main(args: Array<String>) {
-    proxy()
+fun main() {
     oneDriveExample()
     googleDriveExample()
 }
@@ -53,6 +44,7 @@ private fun googleDriveExample() {
 
     val root = drive.parse("https://drive.google.com/drive/folders/1g4Suvo4vKdF0YD_fyNFnNup6JTgKvv_k?usp=sharing")
     println(root)
-    val root2 = drive.parse("https://drive.google.com/drive/folders/1CoitKJ0G9rWZvEeVyMtF1VitxVaUToAO")
+    val root2 = drive.parse("https://drive.google.com/drive/folders/1HEFhKN4rKSHDFi4OAp2wvuKvsWu6Q367")
+    println(root2.files.first().image!!.thumbnail())
     println(root2)
 }

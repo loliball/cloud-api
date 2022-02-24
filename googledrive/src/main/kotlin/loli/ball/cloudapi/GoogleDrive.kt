@@ -54,10 +54,10 @@ class GoogleDrive(
             } else {
                 val image = if (gf.thumbnailLink != null) {
                     CloudImage(
-                        thumbnail = { queryBigThumbnailWidth(fileId) },
+                        thumbnail = { queryBigThumbnailWidth(gf.id) },
                         thumbnailSmall = { gf.thumbnailLink },
-                        thumbnailWidth = { queryBigThumbnailWidth(fileId, it) },
-                        thumbnailHeight = { queryBigThumbnailHeight(fileId, it) },
+                        thumbnailWidth = { queryBigThumbnailWidth(gf.id, it) },
+                        thumbnailHeight = { queryBigThumbnailHeight(gf.id, it) },
                         width = gf.imageMediaMetadata?.width ?: 0,
                         height = gf.imageMediaMetadata?.height ?: 0
                     )
