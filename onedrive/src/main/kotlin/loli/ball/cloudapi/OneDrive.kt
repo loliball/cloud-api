@@ -57,8 +57,8 @@ class OneDrive(private val client: OkHttpClient = OkHttpClient()) : CloudDrive {
                 files.add(CloudFile(of.name, of.download, image))
             }
         }
-        dirs.sortBy { it.name }
-        files.sortBy { it.name }
+        dirs.sort()
+        files.sort()
         return CloudRoot(dirs, files)
     }
 

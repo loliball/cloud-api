@@ -65,8 +65,17 @@ class GoogleDrive(
                 files.add(CloudFile(gf.name, gf.id.toDownloadLink(), image))
             }
         }
-        dirs.sortBy { it.name }
-        files.sortBy { it.name }
+        dirs.sortWith { a, b ->
+            if (a.name.length == b.name.length) {
+                a.name.compareTo(b.name)
+            } else if (a.name.length > b.name.length) {
+                1
+            } else {
+                -1
+            }
+        }
+        dirs.sort()
+        files.sort()
         return CloudRoot(dirs, files)
     }
 
