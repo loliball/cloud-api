@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/example" />
             <option value="$PROJECT_DIR$/googledrive" />
             <option value="$PROJECT_DIR$/onedrive" />
+            <option value="$PROJECT_DIR$/zipfile" />
           </set>
         </option>
       </GradleProjectSettings>

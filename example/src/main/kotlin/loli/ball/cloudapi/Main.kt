@@ -1,7 +1,9 @@
 package loli.ball.cloudapi
 
 import okhttp3.OkHttpClient
+import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.net.InetSocketAddress
 import java.net.Proxy
 
@@ -11,6 +13,27 @@ const val port = "10800"
 fun main() {
     oneDriveExample()
     googleDriveExample()
+    zipFileExample()
+}
+
+private fun zipFileExample() {
+//    val drive = ZipFile("GBK")
+//    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\新建文件夹.zip").toURI().toString())
+//    println(root)
+//    val root2 = drive.parse(root.dirs.first().url)
+//    println(root2)
+//    val root3 = drive.parse(root2.dirs.first().url)
+//    println(root3)
+
+    val drive = ZipFile("SHIFT_JIS")
+    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\3月-超高画質版.zip").toURI().toString())
+    println(root)
+    println(root.files.first().url)
+    val thumbnail = root.files[3].image!!.thumbnail()
+    println(thumbnail)
+    val t = System.currentTimeMillis()
+    ZipFile.getFile(thumbnail).copyTo(FileOutputStream("C:\\Users\\hp\\Desktop\\" + root.files[3].name))
+    println(System.currentTimeMillis() - t)
 }
 
 private fun oneDriveExample() {
