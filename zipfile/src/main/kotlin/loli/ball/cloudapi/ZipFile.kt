@@ -11,8 +11,11 @@ import java.util.zip.ZipFile as ZIP
 class ZipFile(var charset: String = "UTF-8") : CloudDrive {
 
     companion object {
+
+        private fun String.toURI() = URI(this.replace(" ", "%20"))
+
         fun isSupport(url: String): Boolean {
-            val uri = URI(url)
+            val uri = url.toURI()
             return uri.scheme == "file" && uri.schemeSpecificPart.endsWith(".zip", true)
         }
 
@@ -46,7 +49,7 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
         }
 
         private fun init(url: String, charset: String): Pair<TreeRoot, TreeNode> {
-            val uri = URI(url)
+            val uri = url.toURI()
             val file = File(URI(uri.scheme, uri.schemeSpecificPart, null))
             val realPath = file.path
             val fragment = uri.fragment.orEmpty()
@@ -70,7 +73,7 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
 
     override fun parse(url: String): CloudRoot {
         val pair = init(url, charset)
-        val uri = URI(url)
+        val uri = url.toURI()
         val node = pair.second
         val dirs = mutableListOf<CloudDirectory>()
         val files = mutableListOf<CloudFile>()
@@ -111,6 +114,8 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
                 }
             }
         }
+        dirs.sort()
+        files.sort()
         return CloudRoot(dirs, files)
     }
 

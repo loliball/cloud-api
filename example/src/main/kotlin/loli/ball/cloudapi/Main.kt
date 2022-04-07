@@ -3,7 +3,6 @@ package loli.ball.cloudapi
 import okhttp3.OkHttpClient
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.net.InetSocketAddress
 import java.net.Proxy
 
@@ -25,15 +24,15 @@ private fun zipFileExample() {
 //    val root3 = drive.parse(root2.dirs.first().url)
 //    println(root3)
 
-    val drive = ZipFile("SHIFT_JIS")
-    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\3月-超高画質版.zip").toURI().toString())
+    val drive = ZipFile("GBK") //SHIFT_JIS
+    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\乾 紗寿叶.zip").toURI().toString())
     println(root)
-    println(root.files.first().url)
-    val thumbnail = root.files[3].image!!.thumbnail()
-    println(thumbnail)
-    val t = System.currentTimeMillis()
-    ZipFile.getFile(thumbnail).copyTo(FileOutputStream("C:\\Users\\hp\\Desktop\\" + root.files[3].name))
-    println(System.currentTimeMillis() - t)
+    println(drive.parse(root.dirs.first().url).files.first().image!!.thumbnail())
+//    val thumbnail = root.files[3].image!!.thumbnail()
+//    println(thumbnail)
+//    val t = System.currentTimeMillis()
+//    ZipFile.getFile(thumbnail).copyTo(FileOutputStream("C:\\Users\\hp\\Desktop\\" + root.files[3].name))
+//    println(System.currentTimeMillis() - t)
 }
 
 private fun oneDriveExample() {
