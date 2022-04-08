@@ -4,7 +4,7 @@ import java.io.File
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
-import java.util.WeakHashMap
+import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile as ZIP
 
@@ -30,19 +30,24 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
 
         private fun unZip(file: File, charset: String): TreeRoot {
             val zip = ZIP(file, Charset.forName(charset))
-            val root = TreeNode(null)
+            val root = TreeNode(null, "/", true)
             for (zipEntry in zip.entries()) {
+//                println(zipEntry)
                 var current = root.children
                 var tail: TreeNode? = null
+                val sb = StringBuilder()
                 zipEntry.name.split("/").forEach { p ->
                     if (p.isNotEmpty()) {
+                        sb.append(p).append("/")
                         if (!current.containsKey(p)) {
-                            current[p] = TreeNode(null)
+                            current[p] = TreeNode(null, sb.toString(), true)
                         }
                         tail = current[p]
                         current = current[p]!!.children
                     }
                 }
+                tail?.path = zipEntry.name
+                tail?.isDirectory = zipEntry.isDirectory
                 tail?.entry = zipEntry
             }
             return TreeRoot(zip, root)
@@ -78,22 +83,22 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
         val dirs = mutableListOf<CloudDirectory>()
         val files = mutableListOf<CloudFile>()
         node.children.forEach { one ->
-            val entry = one.value.entry
-            entry?.let {
-                if (entry.isDirectory) {
-                    dirs.add(
-                        CloudDirectory(
-                            one.key,
-                            URI(uri.scheme, uri.schemeSpecificPart, entry.name).toString()
-                        )
+            val entry = one.value
+            if (entry.isDirectory) {
+                dirs.add(
+                    CloudDirectory(
+                        one.key,
+                        URI(uri.scheme, uri.schemeSpecificPart, entry.path).toString()
                     )
-                } else {
-                    val image = if (entry.name.isImage()) {
+                )
+            } else {
+                entry.entry?.let {
+                    val image = if (it.name.isImage()) {
                         val getImage = {
-                            URI(uri.scheme, uri.schemeSpecificPart, entry.name).toString()
+                            URI(uri.scheme, uri.schemeSpecificPart, it.name).toString()
                         }
                         val getImage2 = { _: Int ->
-                            URI(uri.scheme, uri.schemeSpecificPart, entry.name).toString()
+                            URI(uri.scheme, uri.schemeSpecificPart, it.name).toString()
                         }
                         CloudImage(
                             thumbnail = getImage,
@@ -107,7 +112,7 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
                     files.add(
                         CloudFile(
                             one.key,
-                            URI(uri.scheme, uri.schemeSpecificPart, entry.name).toString(),
+                            URI(uri.scheme, uri.schemeSpecificPart, it.name).toString(),
                             image
                         )
                     )
@@ -148,6 +153,8 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
 
     data class TreeNode(
         var entry: ZipEntry?,
+        var path: String,
+        var isDirectory: Boolean,
         val children: MutableMap<String, TreeNode> = mutableMapOf()
     )
 

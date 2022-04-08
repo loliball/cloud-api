@@ -24,8 +24,10 @@ private fun zipFileExample() {
 //    val root3 = drive.parse(root2.dirs.first().url)
 //    println(root3)
 
-    val drive = ZipFile("GBK") //SHIFT_JIS
-    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\乾 紗寿叶.zip").toURI().toString())
+//    val drive = ZipFile("GBK")
+//    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\乾 紗寿叶.zip").toURI().toString())
+    val drive = ZipFile("SHIFT_JIS")
+    val root = drive.parse(File("C:\\Users\\hp\\Desktop\\バニー衣装ル・マランとえっち.zip").toURI().toString())
     println(root)
     println(drive.parse(root.dirs.first().url).files.first().image!!.thumbnail())
 //    val thumbnail = root.files[3].image!!.thumbnail()
