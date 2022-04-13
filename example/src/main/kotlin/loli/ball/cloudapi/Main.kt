@@ -13,6 +13,13 @@ fun main() {
     oneDriveExample()
     googleDriveExample()
     zipFileExample()
+    localFileExample()
+}
+
+private fun localFileExample() {
+    val drive = LocalFile()
+    val root = drive.parse(File("E:\\CloudMusic").toURI().toString())
+    println(root)
 }
 
 private fun zipFileExample() {
@@ -43,11 +50,14 @@ private fun oneDriveExample() {
         .proxy(Proxy(Proxy.Type.HTTP, InetSocketAddress(address, port.toInt())))
         .build()
     val drive = OneDrive(client)
-    val root = drive.parse("https://1drv.ms/u/s!Ai6oanP7THBlg7kTtDtBzJA7xXVrEA?e=2SVm4N")
+    val root =
+        drive.parse("https://huaniaofengyue-my.sharepoint.cn/:f:/g/personal/fengyuemeng_huaniaofengyue_partner_onmschina_cn/Ej29ZjzZboJOnYwI_UaUR5MBlLJaSap1vVxXcxcDx9fk7A?e=gH8Ldd")
     println(root)
-    val root2 = drive.parse("https://1drv.ms/f/s!Ai6oanP7THBlg75LtDtBzJA7xXVrEA")
-    println(root2.files.first().image!!.thumbnail())
-    println(root2)
+//    val root = drive.parse("https://1drv.ms/u/s!Ai6oanP7THBlg7kTtDtBzJA7xXVrEA?e=2SVm4N")
+//    println(root)
+//    val root2 = drive.parse("https://1drv.ms/f/s!Ai6oanP7THBlg75LtDtBzJA7xXVrEA")
+//    println(root2.files.first().image!!.thumbnail())
+//    println(root2)
 }
 
 private fun googleDriveExample() {

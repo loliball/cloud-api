@@ -12,8 +12,6 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
 
     companion object {
 
-        private fun String.toURI() = URI(this.replace(" ", "%20"))
-
         fun isSupport(url: String): Boolean {
             val uri = url.toURI()
             return uri.scheme == "file" && uri.schemeSpecificPart.endsWith(".zip", true)
@@ -123,16 +121,6 @@ class ZipFile(var charset: String = "UTF-8") : CloudDrive {
         files.sort()
         return CloudRoot(dirs, files)
     }
-
-    private fun String.isImage(): Boolean {
-        return endsWith(".png", true) ||
-                endsWith(".jpg", true) ||
-                endsWith(".jpeg", true) ||
-                endsWith(".gif", true) ||
-                endsWith(".bmp", true) ||
-                endsWith(".webp", true)
-    }
-
 
     data class TreeRoot(
         val zipFile: ZIP,

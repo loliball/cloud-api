@@ -18,10 +18,7 @@ publishing {
 }
 
 dependencies {
-    api(project(":localfile"))
-    api(project(":zipfile"))
-    api(project(":onedrive"))
-    api(project(":googledrive"))
+    api(project(":core"))
     testImplementation(kotlin("test"))
 }
 
