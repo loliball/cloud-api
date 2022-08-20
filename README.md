@@ -11,6 +11,11 @@ allprojects {
 Step 2. Add the dependency
 ```
 dependencies {
-	implementation("com.github.WhichWho:kemono-api:+")
+    val cloudApiVersion = "3.0.0"
+    implementation("com.github.WhichWho.cloud-api:core:$cloudApiVersion")
+    implementation("com.github.WhichWho.cloud-api:onedrive:$cloudApiVersion")
+    implementation("com.github.WhichWho.cloud-api:googledrive:$cloudApiVersion")
+    implementation("com.github.WhichWho.cloud-api:zipfile:$cloudApiVersion")
+    implementation("com.github.WhichWho.cloud-api:localfile:$cloudApiVersion")
 }
 ```
